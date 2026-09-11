@@ -473,6 +473,57 @@
             );
         }
 
+        const normalizeText = (str) => String(str ?? "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+        const matchesSearchTerm = (record, term) => {
+            if (!term) return true;
+            const t = normalizeText(term);
+            return (
+                normalizeText(record.numSei).includes(t) ||
+                normalizeText(record.displayId).includes(t) ||
+                normalizeText(record.objeto).includes(t) ||
+                normalizeText(record.autor).includes(t) ||
+                normalizeText(record.tipoDemanda).includes(t)
+            );
+        };
+
+        const fetchCategoryData = async (cat) => {
+            const response = await fetch(`${APPS_SCRIPT_URL}?categoria=${encodeURIComponent(cat)}`);
+            if (!response.ok) throw new Error(`Falha na conexão com a planilha (HTTP ${response.status})`);
+            const data = await response.json();
+            if (!Array.isArray(data)) throw new Error("A planilha retornou um formato de dados inesperado.");
+
+            const mapped = data.map((item, index) => {
+                const rawPrazo = item.prazo || item.Prazo || item.PRAZO || item["Prazo Fatal"] || item["Data Limite"] || item["Vencimento"] || null;
+                const rawStatus = item.status || item.Status || item.STATUS || "A FAZER";
+                const rawUrgente = item.urgente || item.Urgente || item.URGENTE || false;
+
+                let finalDisplayId = String(item.id ?? item.sequencial ?? "---");
+                if (!cat.includes("Ofício")) {
+                    finalDisplayId = String(index + 1).padStart(3, '0');
+                }
+
+                const rawLink = item.link_gdrive || item.linkgdrive || item["Link GDrive"] || item["LINK GDRIVE"] || item.link || item.Link || item.LINK || item["Link do GDrive"] || "";
+
+                return {
+                    id: index,
+                    displayId: finalDisplayId,
+                    numSei: String(item.numero_sei ?? item.numsei ?? "---"),
+                    linkGDrive: (rawLink && rawLink !== "undefined") ? String(rawLink).trim() : "",
+                    tipoDemanda: String(item.tipo_de_demanda ?? item.tipodemanda ?? "---"),
+                    objeto: String(item.objeto ?? "---"),
+                    autor: String(item.autor ?? "---"),
+                    categoria: cat,
+                    data: formatDate(item.data),
+                    prazo: rawPrazo,
+                    status: rawStatus,
+                    urgente: rawUrgente === true || String(rawUrgente).toLowerCase() === "true"
+                };
+            });
+            globalCache[cat] = mapped;
+            return mapped;
+        };
+
         function App() {
             const [records, setRecords] = useState([]);
             const [activeTab, setActiveTab] = useState(CATEGORIAS[0]);
@@ -551,39 +602,12 @@
                 }
                 setLoading(true);
                 try {
-                    const response = await fetch(`${APPS_SCRIPT_URL}?categoria=${encodeURIComponent(cat)}`);
-                    if (!response.ok) throw new Error(`Falha na conexão com a planilha (HTTP ${response.status})`);
-                    const data = await response.json();
-                    if (!Array.isArray(data)) throw new Error("A planilha retornou um formato de dados inesperado.");
-
-                    const mapped = data.map((item, index) => {
-                        const rawPrazo = item.prazo || item.Prazo || item.PRAZO || item["Prazo Fatal"] || item["Data Limite"] || item["Vencimento"] || null;
-                        const rawStatus = item.status || item.Status || item.STATUS || "A FAZER";
-                        const rawUrgente = item.urgente || item.Urgente || item.URGENTE || false;
-
-                        let finalDisplayId = String(item.id ?? item.sequencial ?? "---");
-                        if (!cat.includes("Ofício")) {
-                            finalDisplayId = String(index + 1).padStart(3, '0');
-                        }
-
-                        const rawLink = item.link_gdrive || item.linkgdrive || item["Link GDrive"] || item["LINK GDRIVE"] || item.link || item.Link || item.LINK || item["Link do GDrive"] || "";
-
-                        return {
-                            id: index, 
-                            displayId: finalDisplayId, 
-                            numSei: String(item.numero_sei ?? item.numsei ?? "---"),
-                            linkGDrive: (rawLink && rawLink !== "undefined") ? String(rawLink).trim() : "",
-                            tipoDemanda: String(item.tipo_de_demanda ?? item.tipodemanda ?? "---"), 
-                            objeto: String(item.objeto ?? "---"),
-                            autor: String(item.autor ?? "---"), 
-                            categoria: cat, 
-                            data: formatDate(item.data),
-                            prazo: rawPrazo, 
-                            status: rawStatus,
-                            urgente: rawUrgente === true || String(rawUrgente).toLowerCase() === "true"
-                        };
-                    });
-                    globalCache[cat] = mapped; setRecords(mapped); setVisibleCount(50); setErrorMsg(null);
+                    const mapped = await fetchCategoryData(cat);
+                    if (cat === activeTab) {
+                        setRecords(mapped);
+                        setVisibleCount(50);
+                    }
+                    setErrorMsg(null);
                 } catch (e) {
                     console.error(e);
                     setErrorMsg(e.message || "Não foi possível carregar os dados da planilha. Verifique sua conexão e tente novamente.");
@@ -591,7 +615,25 @@
                 finally { setLoading(false); }
             }, [activeTab]);
 
+            const [searchAllChannels, setSearchAllChannels] = useState(false);
+            const [loadingGlobalSearch, setLoadingGlobalSearch] = useState(false);
+
+            const ensureAllCategoriesLoaded = useCallback(async () => {
+                const missing = CATEGORIAS.filter(cat => !globalCache[cat]);
+                if (missing.length === 0) return;
+                setLoadingGlobalSearch(true);
+                try {
+                    await Promise.all(missing.map(cat => fetchCategoryData(cat).catch(e => console.error(`Falha ao carregar ${cat}:`, e))));
+                } finally {
+                    setLoadingGlobalSearch(false);
+                }
+            }, []);
+
             useEffect(() => { loadData(activeTab); }, [activeTab, loadData]);
+
+            useEffect(() => {
+                if (searchAllChannels) ensureAllCategoriesLoaded();
+            }, [searchAllChannels, ensureAllCategoriesLoaded]);
 
             useEffect(() => {
                 if (records.length > 0) {
@@ -669,12 +711,13 @@
 
             const handleDelete = async () => {
                 setSyncing(true);
+                const targetCat = delConfirm.cat;
                 try {
-                    await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "delete", numSei: delConfirm.numSei, categoria: delConfirm.cat }) });
+                    await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "delete", numSei: delConfirm.numSei, categoria: targetCat }) });
                     setDelConfirm({ show: false, numSei: "", cat: "" });
                     setErrorMsg(null);
-                    delete globalCache[activeTab];
-                    setTimeout(() => loadData(activeTab, true), 2000);
+                    delete globalCache[targetCat];
+                    setTimeout(() => loadData(targetCat, true), 2000);
                 } catch (e) {
                     console.error(e);
                     setErrorMsg("Não foi possível excluir o registro. Tente novamente.");
@@ -695,9 +738,8 @@
             };
 
             const filteredRecords = useMemo(() => {
-                const search = searchTerm.toLowerCase();
                 let result = records.filter(r => {
-                    const matchesSearch = searchTerm === "" || String(r.numSei).toLowerCase().includes(search) || String(r.objeto).toLowerCase().includes(search) || String(r.displayId).toLowerCase().includes(search);
+                    const matchesSearch = matchesSearchTerm(r, searchTerm);
                     const matchesDate = filterDate === "" || toISODate(r.data) === filterDate;
                     const matchesAutor = filterAutor === "" || r.autor === filterAutor;
                     const matchesDemanda = filterDemanda === "" || r.tipoDemanda === filterDemanda;
@@ -743,13 +785,36 @@
                 return result;
             }, [records, searchTerm, filterDate, filterAutor, filterDemanda, sortColumn, sortOrder, activeTab]);
 
-            const paginatedRecords = useMemo(() => filteredRecords.slice(0, visibleCount), [filteredRecords, visibleCount]);
+            const isGlobalSearchActive = searchAllChannels && searchTerm.trim() !== "";
+
+            const globalSearchResults = useMemo(() => {
+                if (!isGlobalSearchActive) return [];
+                let result = CATEGORIAS.flatMap(cat => globalCache[cat] || []).filter(r => {
+                    const matchesSearch = matchesSearchTerm(r, searchTerm);
+                    const matchesDate = filterDate === "" || toISODate(r.data) === filterDate;
+                    const matchesAutor = filterAutor === "" || r.autor === filterAutor;
+                    const matchesDemanda = filterDemanda === "" || r.tipoDemanda === filterDemanda;
+                    return matchesSearch && matchesDate && matchesAutor && matchesDemanda;
+                });
+                result.sort((a, b) => {
+                    const dateA = parseDateFlexible(a.data);
+                    const dateB = parseDateFlexible(b.data);
+                    const valA = dateA ? dateA.getTime() : 0;
+                    const valB = dateB ? dateB.getTime() : 0;
+                    return valB - valA;
+                });
+                return result;
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+            }, [isGlobalSearchActive, searchTerm, filterDate, filterAutor, filterDemanda, loadingGlobalSearch]);
+
+            const displayRecords = isGlobalSearchActive ? globalSearchResults : filteredRecords;
+            const paginatedRecords = useMemo(() => displayRecords.slice(0, visibleCount), [displayRecords, visibleCount]);
 
             const exportToExcel = () => {
-                const dataToExport = filteredRecords.map(r => ({ ID: r.displayId, Data: r.data, "Número SEI": r.numSei, "Link GDRIVE": r.linkGDrive, Classificação: r.tipoDemanda, Autor: r.autor, Objeto: r.objeto, Status: r.status, Prazo: r.prazo ? formatDate(r.prazo) : "-" }));
+                const dataToExport = displayRecords.map(r => ({ ID: r.displayId, Canal: r.categoria, Data: r.data, "Número SEI": r.numSei, "Link GDRIVE": r.linkGDrive, Classificação: r.tipoDemanda, Autor: r.autor, Objeto: r.objeto, Status: r.status, Prazo: r.prazo ? formatDate(r.prazo) : "-" }));
                 const worksheet = XLSX.utils.json_to_sheet(dataToExport);
                 const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, "Registros");
-                XLSX.writeFile(workbook, `GEPOP_ControleSEI_${activeTab.split(' ')[0]}.xlsx`);
+                XLSX.writeFile(workbook, `GEPOP_ControleSEI_${isGlobalSearchActive ? "BuscaGlobal" : activeTab.split(' ')[0]}.xlsx`);
             };
 
             const exportToPDF = () => {
@@ -758,13 +823,14 @@
                 const pageWidth = doc.internal.pageSize.getWidth();
                 doc.setFillColor(15, 23, 42); doc.rect(0, 0, pageWidth, 25, 'F');
                 doc.setFontSize(16); doc.setTextColor(255, 255, 255);
-                
-                const tituloAba = activeTab === "Prazos MP" ? "PRAZOS" : activeTab;
+
+                const tituloAba = isGlobalSearchActive ? "Busca em Todos os Canais" : (activeTab === "Prazos MP" ? "PRAZOS" : activeTab);
                 doc.text(`Listagem: ${tituloAba}`, 15, 16);
-                
-                const tableData = filteredRecords.map(r => [r.displayId, r.data, r.numSei, r.tipoDemanda, r.autor, r.objeto]);
-                doc.autoTable({ startY: 32, head: [['ID', 'DATA', 'SEI', 'CLASSIFICAÇÃO', 'AUTOR', 'OBJETO']], body: tableData });
-                doc.save(`GEPOP_${tituloAba}.pdf`);
+
+                const tableData = displayRecords.map(r => isGlobalSearchActive ? [r.categoria, r.data, r.numSei, r.tipoDemanda, r.autor, r.objeto] : [r.displayId, r.data, r.numSei, r.tipoDemanda, r.autor, r.objeto]);
+                const head = isGlobalSearchActive ? [['CANAL', 'DATA', 'SEI', 'CLASSIFICAÇÃO', 'AUTOR', 'OBJETO']] : [['ID', 'DATA', 'SEI', 'CLASSIFICAÇÃO', 'AUTOR', 'OBJETO']];
+                doc.autoTable({ startY: 32, head, body: tableData });
+                doc.save(`GEPOP_${isGlobalSearchActive ? "BuscaGlobal" : tituloAba}.pdf`);
             };
 
             const handleSort = (col) => {
@@ -926,7 +992,15 @@
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
                                     <div className="flex flex-col md:flex-row md:items-end gap-4">
                                         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                                            <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Busca</label><input type="text" placeholder="Filtrar..." className="filter-input" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} /></div>
+                                            <div className="space-y-1">
+                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Busca</label>
+                                                <input type="text" placeholder="Filtrar..." className="filter-input" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                                                <label className="flex items-center gap-1.5 pt-1 cursor-pointer select-none w-fit">
+                                                    <input type="checkbox" checked={searchAllChannels} onChange={e => setSearchAllChannels(e.target.checked)} className="w-3 h-3 rounded accent-indigo-600 cursor-pointer" />
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Buscar em todos os canais</span>
+                                                    {loadingGlobalSearch && <div className="w-3 h-3 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>}
+                                                </label>
+                                            </div>
                                             <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Data</label><input type="date" className="filter-input" value={filterDate} onChange={e => setFilterDate(e.target.value)} /></div>
                                             <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Autor</label><select className="filter-input" value={filterAutor} onChange={e => setFilterAutor(e.target.value)}><option value="">Todos os Autores</option>{AUTORES.map(a => <option key={a} value={a}>{a}</option>)}</select></div>
                                             <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Demanda</label><select className="filter-input" value={filterDemanda} onChange={e => setFilterDemanda(e.target.value)}><option value="">Todas as Demandas</option>{sortedTiposDemanda.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
@@ -937,8 +1011,9 @@
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                            <span className="text-slate-700 font-black">{filteredRecords.length}</span> de {records.length} registro{records.length === 1 ? "" : "s"}
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                            <span><span className="text-slate-700 font-black">{displayRecords.length}</span> {isGlobalSearchActive ? "resultado(s) em todos os canais" : `de ${records.length} registro${records.length === 1 ? "" : "s"}`}</span>
+                                            {isGlobalSearchActive && <span className="inline-flex items-center gap-1 text-indigo-500"><Icon name="globe" size={11} /> Busca global</span>}
                                         </p>
                                         {hasActiveFilters && (
                                             <button onClick={clearFilters} className="flex items-center gap-1.5 text-[10px] font-black uppercase text-indigo-600 hover:text-indigo-800 transition-colors">
@@ -949,7 +1024,7 @@
                                 </div>
 
                                 {viewMode === 'charts' ? (
-                                    <DashboardView data={filteredRecords} />
+                                    <DashboardView data={displayRecords} />
                                 ) : (
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl min-h-[500px]">
                                         <div className="table-scroll overflow-x-auto">
@@ -959,7 +1034,28 @@
                                                 <>
                                                     <table className="spreadsheet-table">
                                                         <thead>
-                                                            {isPrazosTab ? (
+                                                            {isGlobalSearchActive ? (
+                                                                <tr>
+                                                                    <th className="w-[130px]">Canal</th>
+                                                                    <th className="w-[100px]">Data</th>
+                                                                    <th className="w-[190px]">Número SEI</th>
+                                                                    <th className="w-[70px] text-center">Pasta</th>
+                                                                    <th className="w-[170px]">
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span>Classificação</span>
+                                                                            <ColumnFilterIcon value={filterDemanda} onChange={setFilterDemanda} options={sortedTiposDemanda} allLabel="Todas" />
+                                                                        </div>
+                                                                    </th>
+                                                                    <th className="w-[130px]">
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span>Autor</span>
+                                                                            <ColumnFilterIcon value={filterAutor} onChange={setFilterAutor} options={AUTORES} allLabel="Todos" />
+                                                                        </div>
+                                                                    </th>
+                                                                    <th className="w-auto">Objeto / Resumo</th>
+                                                                    <th className="w-[90px] text-center">Ações</th>
+                                                                </tr>
+                                                            ) : isPrazosTab ? (
                                                                 <tr>
                                                                     <th className="w-[60px] text-center cursor-pointer hover:bg-slate-200 transition-colors group/sort" onClick={() => handleSort('id')}>
                                                                         <div className="flex items-center justify-center gap-1">ID<div className={`flex flex-col ${sortColumn === 'id' || sortColumn === 'default' ? 'opacity-100' : 'opacity-30'}`}><Icon name="chevron-up" className={`w-3 h-3 ${(sortColumn === 'id' || sortColumn === 'default') && sortOrder === 'asc' ? 'text-indigo-600' : ''}`} /><Icon name="chevron-down" className={`w-3 h-3 ${(sortColumn === 'id' || sortColumn === 'default') && sortOrder === 'desc' ? 'text-indigo-600' : ''}`} /></div></div>
@@ -1011,8 +1107,18 @@
                                                         <tbody>
                                                             {paginatedRecords.length > 0 ? (
                                                                 paginatedRecords.map((rec, i) => (
-                                                                    <tr key={i} className={rec.urgente && isPrazosTab ? "bg-red-50/50" : ""}>
-                                                                        {isPrazosTab ? (
+                                                                    <tr key={i} className={rec.urgente && isPrazosTab && !isGlobalSearchActive ? "bg-red-50/50" : ""}>
+                                                                        {isGlobalSearchActive ? (
+                                                                            <>
+                                                                                <td className="text-[10px] font-black uppercase text-indigo-600">{rec.categoria === "Prazos MP" ? "PRAZOS" : rec.categoria.split(' - ')[0]}</td>
+                                                                                <td className="font-mono text-slate-500 font-medium">{rec.data}</td>
+                                                                                <td><div className="flex items-center gap-2 group/sei"><span className="font-black text-slate-900 whitespace-nowrap">{rec.numSei}</span><button onClick={() => copyToClipboard(rec.numSei)} className="p-1 text-slate-300 hover:text-indigo-600 transition-colors opacity-0 group-hover/sei:opacity-100" aria-label="Copiar número SEI"><Icon name="copy" size={14} /></button></div></td>
+                                                                                <td><Hyperlink url={rec.linkGDrive} /></td>
+                                                                                <td className="font-bold text-[10px] text-slate-500 uppercase">{rec.tipoDemanda}</td>
+                                                                                <td className="font-bold text-slate-500 uppercase text-[10px]">{rec.autor}</td>
+                                                                                <td><ExpandableObjectCell text={rec.objeto} /></td>
+                                                                            </>
+                                                                        ) : isPrazosTab ? (
                                                                             <>
                                                                                 <td className="text-center font-mono font-bold text-slate-400">{rec.displayId}</td>
                                                                                 <td className="text-center">
@@ -1046,11 +1152,11 @@
                                                                             setFormData({ ...rec, numManual: rec.displayId, dataManual: toISODate(rec.data), prazo: prazoIso, status: rec.status, urgente: rec.urgente }); 
                                                                             setDuplicateWarning(false);
                                                                             setShowModal(true); 
-                                                                        }} className="p-1.5 text-slate-400 hover:text-indigo-600 transition-all" aria-label="Editar registro"><Icon name="edit-3" size={14} /></button><button onClick={() => setDelConfirm({ show: true, numSei: rec.numSei, cat: activeTab })} className="p-1.5 text-slate-400 hover:text-rose-600 transition-all" aria-label="Excluir registro"><Icon name="trash-2" size={14} /></button></div></td>
+                                                                        }} className="p-1.5 text-slate-400 hover:text-indigo-600 transition-all" aria-label="Editar registro"><Icon name="edit-3" size={14} /></button><button onClick={() => setDelConfirm({ show: true, numSei: rec.numSei, cat: rec.categoria })} className="p-1.5 text-slate-400 hover:text-rose-600 transition-all" aria-label="Excluir registro"><Icon name="trash-2" size={14} /></button></div></td>
                                                                     </tr>
                                                                 ))
                                                             ) : (
-                                                                <tr><td colSpan={isPrazosTab ? "10" : "8"} className="px-6 py-24 text-center border-none">
+                                                                <tr><td colSpan={(isPrazosTab && !isGlobalSearchActive) ? "10" : "8"} className="px-6 py-24 text-center border-none">
                                                                     <div className="flex flex-col items-center gap-3 text-slate-300">
                                                                         <div className="bg-slate-50 p-4 rounded-2xl"><Icon name="search-x" size={28} className="text-slate-300" /></div>
                                                                         <p className="font-bold text-slate-400 text-sm">Nenhum registro encontrado</p>
@@ -1060,7 +1166,7 @@
                                                             )}
                                                         </tbody>
                                                     </table>
-                                                    {visibleCount < filteredRecords.length && (
+                                                    {visibleCount < displayRecords.length && (
                                                         <div className="p-4 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-center"><button onClick={() => setVisibleCount(prev => prev + 100)} className="px-8 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-500 hover:bg-slate-100 transition-all shadow-sm uppercase tracking-widest">Carregar mais registros</button></div>
                                                     )}
                                                 </>
