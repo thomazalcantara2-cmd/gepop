@@ -1119,7 +1119,7 @@
                                                                     <th className="w-[100px]">Data</th>
                                                                     <th className="w-[190px]">Número SEI</th>
                                                                     <th className="w-[70px] text-center">Pasta</th>
-                                                                    <th className="w-[170px]">
+                                                                    <th className="w-[230px]">
                                                                         <div className="flex items-center gap-1">
                                                                             <span>Classificação</span>
                                                                             <ColumnFilterIcon value={filterDemanda} onChange={setFilterDemanda} options={sortedTiposDemanda} allLabel="Todas" />
@@ -1166,7 +1166,7 @@
                                                                     </th>
                                                                     <th className="w-[200px]">Número SEI</th>
                                                                     <th className="w-[70px] text-center">Pasta</th>
-                                                                    <th className="w-[180px]">
+                                                                    <th className="w-[240px]">
                                                                         <div className="flex items-center gap-1">
                                                                             <span>Classificação</span>
                                                                             <ColumnFilterIcon value={filterDemanda} onChange={setFilterDemanda} options={sortedTiposDemanda} allLabel="Todas" />
@@ -1193,7 +1193,7 @@
                                                                                 <td className="font-mono text-slate-500 font-medium">{rec.data}</td>
                                                                                 <td><div className="flex items-center gap-2 group/sei min-w-0"><span className="font-black text-slate-900 truncate min-w-0" title={rec.numSei}>{rec.numSei}</span><button onClick={() => copyToClipboard(rec.numSei)} className="p-1 text-slate-300 hover:text-indigo-600 transition-colors opacity-0 group-hover/sei:opacity-100 flex-shrink-0" aria-label="Copiar número SEI"><Icon name="copy" size={14} /></button></div></td>
                                                                                 <td><Hyperlink url={rec.linkGDrive} /></td>
-                                                                                <td className="font-bold text-[10px] text-slate-500 uppercase truncate" title={rec.tipoDemanda}>{rec.tipoDemanda}</td>
+                                                                                <td className="font-bold text-[10px] text-slate-500 uppercase">{rec.tipoDemanda}</td>
                                                                                 <td className="font-bold text-slate-500 uppercase text-[10px] truncate" title={rec.autor}>{rec.autor}</td>
                                                                                 <td><ExpandableObjectCell text={rec.objeto} /></td>
                                                                             </>
@@ -1217,7 +1217,7 @@
                                                                                 <td className="text-center font-mono text-slate-500 font-medium">{rec.data}</td>
                                                                                 <td><div className="flex items-center gap-2 group/sei min-w-0"><span className="font-black text-slate-900 truncate min-w-0" title={rec.numSei}>{rec.numSei}</span><button onClick={() => copyToClipboard(rec.numSei)} className="p-1 text-slate-300 hover:text-indigo-600 transition-colors opacity-0 group-hover/sei:opacity-100 flex-shrink-0" aria-label="Copiar número SEI"><Icon name="copy" size={14} /></button></div></td>
                                                                                 <td><Hyperlink url={rec.linkGDrive} /></td>
-                                                                                <td className="font-bold text-[10px] text-slate-500 uppercase truncate" title={rec.tipoDemanda}>{rec.tipoDemanda}</td>
+                                                                                <td className="font-bold text-[10px] text-slate-500 uppercase">{rec.tipoDemanda}</td>
                                                                                 <td className="font-bold text-slate-500 uppercase text-[10px] truncate" title={rec.autor}>{rec.autor}</td>
                                                                                 <td><ExpandableObjectCell text={rec.objeto} /></td>
                                                                             </>
