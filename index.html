@@ -83,11 +83,11 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Estilos específicos para Prazos */
-        .status-badge { padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; text-transform: uppercase; display: inline-block; letter-spacing: 0.02em; }
-        .status-afazer { background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
-        .status-elaboracao { background-color: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; }
-        .status-aguardando { background-color: #fff7ed; color: #f97316; border: 1px solid #fed7aa; }
-        .status-realizado { background-color: #f0fdf4; color: #22c55e; border: 1px solid #bbf7d0; }
+        .status-badge { font-size: 10px; font-weight: 800; text-transform: uppercase; display: inline-block; letter-spacing: 0.02em; }
+        .status-afazer { color: #64748b; }
+        .status-elaboracao { color: #3b82f6; }
+        .status-aguardando { color: #f97316; }
+        .status-realizado { color: #22c55e; }
         
         .toggle-checkbox:checked { right: 0; border-color: #4f46e5; }
         .toggle-checkbox:checked + .toggle-label { background-color: #4f46e5; }
@@ -607,6 +607,7 @@
             const [filterDateTo, setFilterDateTo] = useState("");
             const [filterAutor, setFilterAutor] = useState("");
             const [filterDemanda, setFilterDemanda] = useState("");
+            const [filterStatus, setFilterStatus] = useState("");
 
             const [duplicateWarning, setDuplicateWarning] = useState(false);
             
@@ -805,7 +806,8 @@
                     const matchesDate = (filterDate === "" || recDateISO >= filterDate) && (filterDateTo === "" || recDateISO <= filterDateTo);
                     const matchesAutor = filterAutor === "" || r.autor === filterAutor;
                     const matchesDemanda = filterDemanda === "" || r.tipoDemanda === filterDemanda;
-                    return matchesSearch && matchesDate && matchesAutor && matchesDemanda;
+                    const matchesStatus = filterStatus === "" || r.status === filterStatus;
+                    return matchesSearch && matchesDate && matchesAutor && matchesDemanda && matchesStatus;
                 });
                 if (activeTab === "Prazos MP") {
                     result.sort((a, b) => {
@@ -845,7 +847,7 @@
                     });
                 }
                 return result;
-            }, [records, searchTerm, filterDate, filterDateTo, filterAutor, filterDemanda, sortColumn, sortOrder, activeTab]);
+            }, [records, searchTerm, filterDate, filterDateTo, filterAutor, filterDemanda, filterStatus, sortColumn, sortOrder, activeTab]);
 
             const isGlobalSearchActive = searchAllChannels && searchTerm.trim() !== "";
 
@@ -857,7 +859,8 @@
                     const matchesDate = (filterDate === "" || recDateISO >= filterDate) && (filterDateTo === "" || recDateISO <= filterDateTo);
                     const matchesAutor = filterAutor === "" || r.autor === filterAutor;
                     const matchesDemanda = filterDemanda === "" || r.tipoDemanda === filterDemanda;
-                    return matchesSearch && matchesDate && matchesAutor && matchesDemanda;
+                    const matchesStatus = filterStatus === "" || r.status === filterStatus;
+                    return matchesSearch && matchesDate && matchesAutor && matchesDemanda && matchesStatus;
                 });
                 result.sort((a, b) => {
                     const dateA = parseDateFlexible(a.data);
@@ -868,7 +871,7 @@
                 });
                 return result;
                 // eslint-disable-next-line react-hooks/exhaustive-deps
-            }, [isGlobalSearchActive, searchTerm, filterDate, filterDateTo, filterAutor, filterDemanda, loadingGlobalSearch]);
+            }, [isGlobalSearchActive, searchTerm, filterDate, filterDateTo, filterAutor, filterDemanda, filterStatus, loadingGlobalSearch]);
 
             const displayRecords = isGlobalSearchActive ? globalSearchResults : filteredRecords;
             const isSearching = searchTerm.trim() !== "";
@@ -933,7 +936,7 @@
                 
                 let colorClass = "text-emerald-600 bg-emerald-50";
                 let iconName = "clock";
-                if (daysLeft < 0) { colorClass = "text-rose-600 bg-rose-50 font-bold"; iconName = "alert-circle"; }
+                if (daysLeft < 0) { colorClass = "text-rose-700 bg-rose-100 font-bold"; iconName = "alert-circle"; }
                 else if (daysLeft <= 3) { colorClass = "text-rose-600 bg-rose-50 font-bold"; iconName = "alert-octagon"; }
                 else if (daysLeft <= 7) { colorClass = "text-amber-600 bg-amber-50 font-bold"; iconName = "alert-triangle"; }
 
@@ -946,8 +949,8 @@
             };
 
             const isPrazosTab = activeTab === "Prazos MP";
-            const hasActiveFilters = Boolean(searchTerm || filterDate || filterDateTo || filterAutor || filterDemanda);
-            const clearFilters = () => { setSearchTerm(""); setFilterDate(""); setFilterDateTo(""); setFilterAutor(""); setFilterDemanda(""); };
+            const hasActiveFilters = Boolean(searchTerm || filterDate || filterDateTo || filterAutor || filterDemanda || filterStatus);
+            const clearFilters = () => { setSearchTerm(""); setFilterDate(""); setFilterDateTo(""); setFilterAutor(""); setFilterDemanda(""); setFilterStatus(""); };
 
             const Hyperlink = ({ url }) => {
                 if (!url || url === "---" || url === "" || url === "undefined") {
@@ -1144,7 +1147,12 @@
                                                                         <div className="flex items-center justify-center gap-1">Prazo Fatal<div className={`flex flex-col ${sortColumn === 'prazo' ? 'opacity-100' : 'opacity-30'}`}><Icon name="chevron-up" className={`w-3 h-3 ${sortColumn === 'prazo' && sortOrder === 'asc' ? 'text-indigo-600' : ''}`} /><Icon name="chevron-down" className={`w-3 h-3 ${sortColumn === 'prazo' && sortOrder === 'desc' ? 'text-indigo-600' : ''}`} /></div></div>
                                                                     </th>
                                                                     <th className="w-[110px] text-center">Contagem</th>
-                                                                    <th className="w-[120px] text-center">Status</th>
+                                                                    <th className="w-[120px] text-center">
+                                                                        <div className="flex items-center justify-center gap-1">
+                                                                            <span>Status</span>
+                                                                            <ColumnFilterIcon value={filterStatus} onChange={setFilterStatus} options={STATUS_OPCOES} allLabel="Todos" />
+                                                                        </div>
+                                                                    </th>
                                                                     <th className="w-[220px]">Número SEI</th>
                                                                     <th className="w-[70px] text-center">Pasta</th>
                                                                     <th className="w-[100px]">
