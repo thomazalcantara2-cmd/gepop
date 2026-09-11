@@ -62,6 +62,12 @@
         .spreadsheet-table tbody tr { transition: background-color 0.12s ease; }
         .spreadsheet-table tbody tr:nth-child(even) td { background-color: #fafbfc; }
         .spreadsheet-table tbody tr:hover td { background-color: #eef2ff; }
+        .spreadsheet-table tbody tr.prazo-vencido td { background-color: #fef2f2; }
+        .spreadsheet-table tbody tr.prazo-vencido:hover td { background-color: #fee2e2; }
+        .spreadsheet-table tbody tr.prazo-perto td { background-color: #fefce8; }
+        .spreadsheet-table tbody tr.prazo-perto:hover td { background-color: #fef9c3; }
+        .spreadsheet-table tbody tr.prazo-concluido td { background-color: #f0fdf4; }
+        .spreadsheet-table tbody tr.prazo-concluido:hover td { background-color: #dcfce7; }
         .table-scroll > table:last-child tbody tr:last-child td:first-child { border-bottom-left-radius: 1rem; }
         .table-scroll > table:last-child tbody tr:last-child td:last-child { border-bottom-right-radius: 1rem; }
 
@@ -949,6 +955,17 @@
             };
 
             const isPrazosTab = activeTab === "Prazos MP";
+
+            const getPrazoRowClass = (rec) => {
+                if (!isPrazosTab || isGlobalSearchActive) return "";
+                if (rec.status === "REALIZADO") return "prazo-concluido";
+                const daysLeft = calculateDaysLeft(rec.prazo);
+                if (daysLeft === null) return "";
+                if (daysLeft < 0) return "prazo-vencido";
+                if (daysLeft <= 7) return "prazo-perto";
+                return "";
+            };
+
             const hasActiveFilters = Boolean(searchTerm || filterDate || filterDateTo || filterAutor || filterDemanda || filterStatus);
             const clearFilters = () => { setSearchTerm(""); setFilterDate(""); setFilterDateTo(""); setFilterAutor(""); setFilterDemanda(""); setFilterStatus(""); };
 
@@ -1194,7 +1211,7 @@
                                                         <tbody>
                                                             {paginatedRecords.length > 0 ? (
                                                                 paginatedRecords.map((rec, i) => (
-                                                                    <tr key={i} className={rec.urgente && isPrazosTab && !isGlobalSearchActive ? "bg-red-50/50" : ""}>
+                                                                    <tr key={i} className={getPrazoRowClass(rec)}>
                                                                         {isGlobalSearchActive ? (
                                                                             <>
                                                                                 <td className="text-[10px] font-black uppercase text-indigo-600 truncate" title={rec.categoria}>{rec.categoria === "Prazos MP" ? "PRAZOS" : rec.categoria.split(' - ')[0]}</td>
