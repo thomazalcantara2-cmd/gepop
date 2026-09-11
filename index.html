@@ -924,24 +924,24 @@
             const PrazoCell = ({ prazoStr, status }) => {
                 const daysLeft = calculateDaysLeft(prazoStr);
                 if (daysLeft === null) return <span className="text-slate-300">---</span>;
-                
+
                 if (status === "REALIZADO") {
                      return (
-                        <div className="flex items-center gap-2 px-2 py-1 rounded-lg w-fit text-emerald-600 bg-emerald-50 opacity-70">
+                        <div className="flex items-center gap-1.5 text-emerald-600">
                             <Icon name="check-circle" size={12} />
                             <span className="text-[10px] uppercase font-bold">Concluído</span>
                         </div>
                     );
                 }
-                
-                let colorClass = "text-emerald-600 bg-emerald-50";
+
+                let colorClass = "text-emerald-600";
                 let iconName = "clock";
-                if (daysLeft < 0) { colorClass = "text-rose-700 bg-rose-100 font-bold"; iconName = "alert-circle"; }
-                else if (daysLeft <= 3) { colorClass = "text-rose-600 bg-rose-50 font-bold"; iconName = "alert-octagon"; }
-                else if (daysLeft <= 7) { colorClass = "text-amber-600 bg-amber-50 font-bold"; iconName = "alert-triangle"; }
+                if (daysLeft < 0) { colorClass = "text-rose-800 font-bold"; iconName = "alert-circle"; }
+                else if (daysLeft <= 3) { colorClass = "text-rose-600 font-bold"; iconName = "alert-octagon"; }
+                else if (daysLeft <= 7) { colorClass = "text-amber-600 font-bold"; iconName = "alert-triangle"; }
 
                 return (
-                    <div className={`flex items-center gap-2 px-2 py-1 rounded-lg w-fit ${colorClass}`}>
+                    <div className={`flex items-center gap-1.5 ${colorClass}`}>
                         <Icon name={iconName} size={12} />
                         <span className="text-[10px] uppercase font-bold">{daysLeft < 0 ? `Vencido (${Math.abs(daysLeft)}d)` : `${daysLeft} dias`}</span>
                     </div>
