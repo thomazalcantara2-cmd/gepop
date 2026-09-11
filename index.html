@@ -50,16 +50,23 @@
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
+
         /* Estilos de Tabela Profissional */
         .spreadsheet-table { border-collapse: collapse; width: 100%; background: white; font-size: 13px; table-layout: fixed; }
-        .spreadsheet-table th { background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 12px 10px; color: #475569; font-weight: 700; text-align: left; position: sticky; top: 0; z-index: 10; text-transform: uppercase; font-size: 11px; }
-        .spreadsheet-table td { border: 1px solid #e2e8f0; padding: 10px; color: #1e293b; vertical-align: top; word-wrap: break-word; }
-        .spreadsheet-table tr:hover td { background-color: #f1f5f9; }
-        
-        .sidebar-active { background-color: #0f172a; color: white; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); }
+        .spreadsheet-table th { background-color: #fbfbfd; border-bottom: 1.5px solid #e2e8f0; padding: 13px 12px; color: #64748b; font-weight: 700; text-align: left; position: sticky; top: 0; z-index: 10; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.04em; }
+        .spreadsheet-table td { border-bottom: 1px solid #f1f5f9; padding: 12px; color: #1e293b; vertical-align: top; word-wrap: break-word; }
+        .spreadsheet-table tbody tr { transition: background-color 0.12s ease; }
+        .spreadsheet-table tbody tr:hover td { background-color: #f8fafc; }
+        .spreadsheet-table tbody tr:nth-child(even) td { background-color: #fcfcfd; }
+        .spreadsheet-table tbody tr:nth-child(even):hover td { background-color: #f8fafc; }
+
+        .sidebar-active { background-color: #1e1b4b; color: white; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25); }
         .loader { border-top-color: #4f46e5; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .brand-accent { background: linear-gradient(90deg, #4f46e5 0%, #818cf8 45%, transparent 100%); height: 2px; }
+        .count-badge { font-size: 9.5px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,0.12); color: inherit; }
+        .sidebar-active .count-badge { background: rgba(255,255,255,0.18); }
 
         .clamp-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .expanded-text { display: block; overflow: visible; }
@@ -73,7 +80,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Estilos específicos para Prazos */
-        .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; display: inline-block; }
+        .status-badge { padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; text-transform: uppercase; display: inline-block; letter-spacing: 0.02em; }
         .status-afazer { background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
         .status-elaboracao { background-color: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; }
         .status-aguardando { background-color: #fff7ed; color: #f97316; border: 1px solid #fed7aa; }
@@ -114,6 +121,18 @@
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxTAnpy3b3lE9ziGHVvgWeaYtZIzZIsizbdJMOFz7A4NO2UcRZgytgdyZndzIRpZfop/exec";
 
         const CATEGORIAS = ["SEI (entrada) - GEPOP", "Prazos MP", "Despachos - GEPOP", "Ofício SEGEP", "Ofício SAD", "CI- GEPOP/SEGEP/SAD", "PARECER JURÍDICO - GEPOP", "Parecer PGM", "MANIFESTAÇÃO JURÍDICA", "NOTA TÉCNICA GEPOP"];
+        const CATEGORIA_ICONS = {
+            "SEI (entrada) - GEPOP": "inbox",
+            "Prazos MP": "clock",
+            "Despachos - GEPOP": "send",
+            "Ofício SEGEP": "mail",
+            "Ofício SAD": "mail",
+            "CI- GEPOP/SEGEP/SAD": "message-square",
+            "PARECER JURÍDICO - GEPOP": "scale",
+            "Parecer PGM": "scale",
+            "MANIFESTAÇÃO JURÍDICA": "gavel",
+            "NOTA TÉCNICA GEPOP": "file-text"
+        };
         const AUTORES = ["NAYANE MELO", "VIVIAM MINERVINO", "MATHEUS VASCONCELOS", "LUCAS ANTONINO", "HIAGO ANDRADE", "ALINNE BANDEIRA"];
         const TIPOS_DEMANDA = ["DEMANDA DA OUVIDORIA", "DECISÃO JUDICIAL (LICENÇA SEM VENCIMENTO)", "DECISÃO JUDICIAL (REINTEGRAÇÃO OU READMISSÃO)", "ESTÁGIO", "FÉRIAS DE SERVIDOR", "HORAS EXTRAS", "HORÁRIO ESPECIAL", "INSTRUÇÃO PROCESSUAL - INSTRUMENTOS JURÍDICOS", "LIBERAÇÃO DE ACESSOS INTERNOS (SEGEP)", "LICENÇA PARA TRATAMENTO DE SAÚDE", "LICENÇA PARA MANDATO CLASSISTA", "LICENÇA PARA TRATO DE INTERESSE PARTICULAR", "MINUTAS (DECRETO/PORTARIA/LEI/CONVÊNIO/CONTRATO)", "MINISTÉRIO PÚBLICO DO TRABALHO - MPT", "MPPE - MINISTÉRIO PÚBLICO", "NOTA TÉCNICA", "NORMATIZAÇÃO - PORTARIAS", "OFÍCIO CIRCULAR", "PROCESSO ADMINISTRATIVO DISCIPLINAR - PAD", "PLANEJAMENTO ESTRATÉGICO - 100 DIAS", "PARECER JURÍDICO", "PEDIDO DE INFORMAÇÕES - PMJG (INTERNO)", "PARECER PGM", "PERMUTA SERVIDOR", "PAGAMENTO DE QUINQUENIOS", "PROCON", "REQUERIMENTO SERVIDOR (REDUÇÃO DE CARGA HORÁRIA)", "REQUERIMENTO SERVIDOR (PROGRESSÃO FUNCIONAL)", "REQUERIMENTO SERVIDOR (IMPOSTO DE RENDA)", "REQUERIMENTO (GOZO DE LICENÇA PRÊMIO)", "REQUERIMENTO SERVIDOR (EXONERAÇÃO)", "REQUERIMENTO (PRORROGAÇÃO DE POSSE)", "RENOVAÇÃO - CESSÃO DE SERVIDOR EXTERNO (para PMJG)", "REQUERIMENTO SERVIDORA (ESTABILIDADE GESTACIONAL)", "REQUERIMENTO SERVIDOR (GRATIFICAÇÃO | INSALUBRIDADE | RISCO DE VIDA ou SAÚDE)", "REQUERIMENTO CTC", "RENOVAÇÃO DE PVJET - Programa Voluntário de Jornada Estendida de Trabalho", "REQUERIMENTO SERVIDOR (PAGAMENTO FÉRIAS)", "REQUERIMENTOS DIVERSOS (SINDICATOS)", "REQUERIMENTO SERVIDOR (ABONO PERMANÊNCIA)", "REQUERIMENTO SERVIDOR (RESTOS DEIXADOS)", "REQUERIMENTO SERVIDOR (AFASTAMENTO PARA CURSO)", "REQUERIMENTO SERVIDOR (MAJORAÇÃO DE CARGA HORÁRIA)", "REQUERIMENTO SERVIDOR (LICENÇA PRÊMIO EM PECÚNIA)", "SEI", "SELEÇÃO SIMPLIFICADA", "SUBSTITUIÇÃO DE SERVIDOR(A) (FÉRIAS)", "SOLICITAÇÃO DE IMPACTO FINANCEIRO - GRATIFICAÇÕES", "TRIBUNAL DE CONTAS", "VACÂNCIA", "VALORES RETIDOS", "VERBAS RESCISÓRIAS", "ALTERAÇÃO DE LOTAÇÃO DE SERVIDOR(A) NA PMJG", "ANÁLISE DE INSTRUMENTO", "ALTERAÇÃO DE VALOR DE GRATIFICAÇÃO", "ASSINATURAS DE EMPENHO (CONTRATOS)", "AVALIAÇÃO DE DESEMPENHO", "ACÚMULO DE CARGOS", "CESSÃO DE SERVIDOR EXTERNO (para PMJG)", "CESSÃO DE SERVIDOR EXTERNO (DEVOLUÇÃO p Origem)", "CI CIRCULAR", "CORREÇÃO DE PORTARIA (DIVERSOS)", "CONCESSÃO DE FGS / PVGET", "CONVOCAÇÃO PARA JURI POPULAR", "CONSELHO REGIONAL", "CONCURSO", "CPP - CONSELHO DE POLÍTICA FINANCEIRA", "DECISÃO JUDICIAL (POSSE)", "DECISÃO JUDICIAL (BLOQUEIO SALARIAL)", "DECISÃO JUDICIAL (SALDO RESIDUAL DE SERVIDOR)", "DECISÃO JUDICIAL (IMPLANTAÇÃO DE DESCONTOS - PENSÃO ALIMENTÍCIA)", "DECISÃO JUDICIAL (EXONERAÇÃO - PENSÃO ALIMENTÍCIA)", "DECISÃO JUDICIAL (REDUÇÃO DE CARGA HORÁRIA)", "DECISÃO JUDICIAL (GRATIFICAÇÃO)", "DECISÃO JUDICIAL (INFORMAÇÕES FUNCIONAIS E FINANCEIRAS)", "DEPÓSITO JUDICIAL", "DECISÃO JUDICIAL (LICENÇA PRÊMIO EM PECÚNIA)", "TCE", "INSS", "REQUISIÇAO PARA AUDIÊNCIA", "REQUERIMENTO DE SERVIDOR (AUXÍLIO FAMÍLIA)"];
 
@@ -793,12 +812,16 @@
                     {copyStatus && <div className="copy-toast"><Icon name="check-circle" className="text-emerald-400" />Número SEI copiado!</div>}
                     {syncing && !copyStatus && <div className="copy-toast"><div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>Sincronizando com a planilha...</div>}
 
-                    <header className="bg-slate-900 text-white h-16 flex items-center px-6 justify-between shadow-xl sticky top-0 z-50">
-                        <div className="flex items-center gap-4">
-                            <div className="bg-white/10 p-2 rounded-xl border border-white/5 shadow-inner">
+                    <header className="bg-slate-900 text-white h-16 flex items-center px-6 justify-between shadow-xl sticky top-0 z-50 relative">
+                        <div className="brand-accent absolute bottom-0 left-0 right-0"></div>
+                        <div className="flex items-center gap-4 min-w-0">
+                            <div className="bg-white/10 p-2 rounded-xl border border-white/5 shadow-inner flex-shrink-0">
                                 <img src="https://i.ibb.co/8gvSn7GH/logotop-1.webp" alt="Logo GEPOP" className="w-8 h-8 object-contain" />
                             </div>
-                            <h1 className="text-lg font-black tracking-tighter uppercase leading-none">GEPOP - <span className="text-indigo-400 font-light tracking-normal italic">Controle SEI</span></h1>
+                            <div className="min-w-0">
+                                <h1 className="text-lg font-black tracking-tighter uppercase leading-none">GEPOP - <span className="text-indigo-400 font-light tracking-normal italic">Controle SEI</span></h1>
+                                <p className="hidden sm:block text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">{activeTab === "Prazos MP" ? "Prazos MP" : activeTab}</p>
+                            </div>
                         </div>
                         <div className="flex gap-3">
                             <button onClick={() => loadData(activeTab, true)} className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Atualizar Base" aria-label="Atualizar Base"><Icon name="refresh-cw" className={`w-4 h-4 text-slate-400 ${loading ? 'animate-spin' : ''}`} /></button>
@@ -834,22 +857,26 @@
                                     <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest p-3 mb-1 tracking-widest">Modo de Vista</h4>
                                     <div className="grid grid-cols-2 gap-1">
                                         <button onClick={() => setViewMode('table')} className={`p-3 rounded-xl flex items-center justify-center transition-all ${viewMode === 'table' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`} title="Tabela" aria-label="Ver como tabela"><Icon name="table" size={18} /></button>
-                                        <button onClick={() => { setViewMode('charts'); }} className={`p-3 rounded-xl flex items-center justify-center transition-all ${viewMode === 'charts' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`} title="Dashboard" aria-label="Ver dashboard"><Icon name="bar-chart-3" size={18} /></button>
+                                        <button onClick={() => { setViewMode('charts'); }} className={`p-3 rounded-xl flex items-center justify-center transition-all ${viewMode === 'charts' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`} title="Dashboard" aria-label="Ver dashboard"><Icon name="bar-chart-3" size={18} /></button>
                                     </div>
                                 </div>
 
                                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden lg:sticky lg:top-20">
-                                    <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest p-4 border-b border-slate-100 bg-slate-50/50 tracking-widest hidden lg:block">Canais</h4>
+                                    <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest p-4 border-b border-slate-100 bg-slate-50/50 hidden lg:block">Canais</h4>
                                     <div className="p-2 flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible no-scrollbar">
-                                        {CATEGORIAS.map(cat => (
-                                            <button key={cat} onClick={() => { setActiveTab(cat); setViewMode('table'); }} className={`category-pill text-left px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase transition-all flex items-center justify-between gap-2 whitespace-nowrap group ${activeTab === cat ? "sidebar-active" : "text-slate-500 bg-slate-50 lg:bg-transparent hover:bg-slate-100"}`}>
-                                                <div className="flex items-center gap-2 overflow-hidden">
-                                                    {cat === "Prazos MP" && <Icon name="clock" size={10} className="text-rose-400" />}
-                                                    <span className="truncate">{cat === "Prazos MP" ? "PRAZOS" : cat.split(' - ')[0]}</span>
-                                                </div>
-                                                <Icon name="chevron-right" size={12} className="hidden lg:inline-flex" />
-                                            </button>
-                                        ))}
+                                        {CATEGORIAS.map(cat => {
+                                            const isActive = activeTab === cat;
+                                            const isPrazos = cat === "Prazos MP";
+                                            return (
+                                                <button key={cat} onClick={() => { setActiveTab(cat); setViewMode('table'); }} className={`category-pill text-left px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase transition-all flex items-center justify-between gap-2 whitespace-nowrap group ${isActive ? "sidebar-active" : "text-slate-500 bg-slate-50 lg:bg-transparent hover:bg-slate-100"}`}>
+                                                    <div className="flex items-center gap-2.5 overflow-hidden">
+                                                        <Icon name={CATEGORIA_ICONS[cat] || "folder"} size={13} className={isActive ? "text-indigo-300" : isPrazos ? "text-rose-400" : "text-slate-400"} />
+                                                        <span className="truncate">{isPrazos ? "PRAZOS" : cat.split(' - ')[0]}</span>
+                                                    </div>
+                                                    <Icon name="chevron-right" size={12} className={`hidden lg:inline-flex flex-shrink-0 ${isActive ? "opacity-60" : "opacity-0 group-hover:opacity-40"} transition-opacity`} />
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
@@ -967,7 +994,13 @@
                                                                     </tr>
                                                                 ))
                                                             ) : (
-                                                                <tr><td colSpan={isPrazosTab ? "10" : "8"} className="px-6 py-20 text-center text-slate-300 italic font-medium">Nenhum dado encontrado para os critérios selecionados.</td></tr>
+                                                                <tr><td colSpan={isPrazosTab ? "10" : "8"} className="px-6 py-24 text-center border-none">
+                                                                    <div className="flex flex-col items-center gap-3 text-slate-300">
+                                                                        <div className="bg-slate-50 p-4 rounded-2xl"><Icon name="search-x" size={28} className="text-slate-300" /></div>
+                                                                        <p className="font-bold text-slate-400 text-sm">Nenhum registro encontrado</p>
+                                                                        <p className="text-xs font-medium text-slate-300">Ajuste os filtros ou verifique outro canal.</p>
+                                                                    </div>
+                                                                </td></tr>
                                                             )}
                                                         </tbody>
                                                     </table>
@@ -983,13 +1016,24 @@
                         </div>
                     </main>
 
+                    <footer className="mt-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <div className="flex items-center gap-2">
+                            <Icon name="database" size={12} className="text-emerald-500" />
+                            <span>Sincronizado com Google Planilhas</span>
+                        </div>
+                        <span>GEPOP &copy; {new Date().getFullYear()}</span>
+                    </footer>
+
                     {}
                     {showModal && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
                             <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" onClick={() => !syncing && setShowModal(false)}></div>
-                            <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col relative animate-in zoom-in-95">
-                                <div className="p-8 border-b bg-slate-50 flex items-center justify-between">
-                                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">{editMode ? "Editar Registro" : "Novo Registro"}</h3>
+                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col relative animate-in zoom-in-95">
+                                <div className="p-6 md:p-8 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                                    <div>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-indigo-500 mb-1">{editMode ? "Edição" : "Novo lançamento"}</p>
+                                        <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight uppercase">{editMode ? "Editar Registro" : "Novo Registro"}</h3>
+                                    </div>
                                     <button onClick={() => !syncing && setShowModal(false)} className="text-3xl font-light hover:bg-slate-200 w-10 h-10 rounded-full flex items-center justify-center transition-all" aria-label="Fechar formulário">&times;</button>
                                 </div>
                                 <div className="overflow-y-auto p-10 space-y-6 no-scrollbar">
@@ -1138,7 +1182,7 @@
                     {delConfirm.show && (
                         <div className="fixed inset-0 z-[150] flex items-center justify-center p-6">
                             <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm" onClick={() => !syncing && setDelConfirm({ show: false, numSei: "", cat: "" })}></div>
-                            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 relative animate-in zoom-in-95">
+                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative animate-in zoom-in-95">
                                 <div className="bg-rose-50 w-16 h-16 rounded-2xl flex items-center justify-center text-rose-600 mb-6 mx-auto"><Icon name="trash-2" size={32} /></div>
                                 <h3 className="text-xl font-black text-slate-900 text-center mb-2 uppercase">Excluir Registro?</h3>
                                 <p className="text-slate-500 text-center mb-8 font-medium">Esta ação não pode ser desfeita. Deseja realmente remover o SEI <span className="font-black text-slate-900">{delConfirm.numSei}</span>?</p>
