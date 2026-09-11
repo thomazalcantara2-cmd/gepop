@@ -871,7 +871,8 @@
             }, [isGlobalSearchActive, searchTerm, filterDate, filterDateTo, filterAutor, filterDemanda, loadingGlobalSearch]);
 
             const displayRecords = isGlobalSearchActive ? globalSearchResults : filteredRecords;
-            const paginatedRecords = useMemo(() => pageSize === 'all' ? displayRecords : displayRecords.slice(0, pageSize), [displayRecords, pageSize]);
+            const isSearching = searchTerm.trim() !== "";
+            const paginatedRecords = useMemo(() => (pageSize === 'all' || isSearching) ? displayRecords : displayRecords.slice(0, pageSize), [displayRecords, pageSize, isSearching]);
 
             const exportToExcel = () => {
                 const dataToExport = displayRecords.map(r => ({ ID: r.displayId, Canal: r.categoria, Data: r.data, "Número SEI": r.numSei, "Link GDRIVE": r.linkGDrive, Classificação: r.tipoDemanda, Autor: r.autor, Objeto: r.objeto, Status: r.status, Prazo: r.prazo ? formatDate(r.prazo) : "-" }));
@@ -1091,6 +1092,7 @@
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                             <span><span className="text-slate-700 font-black">{displayRecords.length}</span> {isGlobalSearchActive ? "resultado(s) em todos os canais" : `de ${records.length} registro${records.length === 1 ? "" : "s"}`}</span>
                                             {isGlobalSearchActive && <span className="inline-flex items-center gap-1 text-indigo-500"><Icon name="globe" size={11} /> Busca global</span>}
+                                            {isSearching && !isGlobalSearchActive && <span className="inline-flex items-center gap-1 text-indigo-500"><Icon name="search" size={11} /> Mostrando todos os resultados da busca</span>}
                                         </p>
                                         {hasActiveFilters && (
                                             <button onClick={clearFilters} className="flex items-center gap-1.5 text-[10px] font-black uppercase text-indigo-600 hover:text-indigo-800 transition-colors">
