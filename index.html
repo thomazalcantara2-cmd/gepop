@@ -433,6 +433,24 @@
             );
         }
 
+        function ColumnFilterIcon({ value, onChange, options, allLabel = "Todos" }) {
+            const isActive = Boolean(value);
+            return (
+                <span className="relative inline-flex items-center justify-center w-4 h-4 flex-shrink-0" title={isActive ? `Filtro: ${value}` : "Filtrar coluna"}>
+                    <Icon name="filter" size={11} className={isActive ? "text-indigo-500" : "text-slate-300 hover:text-slate-400"} />
+                    <select
+                        value={value}
+                        onChange={e => onChange(e.target.value)}
+                        onClick={e => e.stopPropagation()}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer normal-case"
+                    >
+                        <option value="">{allLabel}</option>
+                        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                </span>
+            );
+        }
+
         function ExpandableObjectCell({ text }) {
             const [isExpanded, setIsExpanded] = useState(false);
             const needsExpansion = text && text.length > 60;
@@ -950,7 +968,12 @@
                                                                     <th className="w-[120px] text-center">Status</th>
                                                                     <th className="w-[160px]">Número SEI</th>
                                                                     <th className="w-[70px] text-center">Pasta</th>
-                                                                    <th className="w-[100px]">Autor</th>
+                                                                    <th className="w-[100px]">
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span>Autor</span>
+                                                                            <ColumnFilterIcon value={filterAutor} onChange={setFilterAutor} options={AUTORES} allLabel="Todos" />
+                                                                        </div>
+                                                                    </th>
                                                                     <th className="w-auto">Objeto</th>
                                                                     <th className="w-[80px] text-center">Ações</th>
                                                                 </tr>
@@ -964,8 +987,18 @@
                                                                     </th>
                                                                     <th className="w-[200px]">Número SEI</th>
                                                                     <th className="w-[70px] text-center">Pasta</th>
-                                                                    <th className="w-[180px]">Classificação</th>
-                                                                    <th className="w-[140px]">Autor</th>
+                                                                    <th className="w-[180px]">
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span>Classificação</span>
+                                                                            <ColumnFilterIcon value={filterDemanda} onChange={setFilterDemanda} options={sortedTiposDemanda} allLabel="Todas" />
+                                                                        </div>
+                                                                    </th>
+                                                                    <th className="w-[140px]">
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span>Autor</span>
+                                                                            <ColumnFilterIcon value={filterAutor} onChange={setFilterAutor} options={AUTORES} allLabel="Todos" />
+                                                                        </div>
+                                                                    </th>
                                                                     <th className="w-auto">Objeto / Resumo</th>
                                                                     <th className="w-[90px] text-center">Ações</th>
                                                                 </tr>
