@@ -43,10 +43,10 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; 
-            margin: 0; 
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #eef1f6;
+            margin: 0;
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -111,7 +111,7 @@
 <body>
     <div id="root">
         <!-- TELA DE ESPERA PARA EVITAR A TELA BRANCA -->
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; color: #64748b; background-color: #f8fafc;">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; color: #64748b; background-color: #eef1f6;">
             <div style="width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
             <h2 style="font-size: 18px; font-weight: 600; color: #1e293b;">Carregando Sistema GEPOP...</h2>
             <p style="margin-top: 10px; font-size: 14px; text-align: center; max-width: 450px;">Se esta tela não desaparecer, significa que o Google Sites bloqueou os scripts necessários para desenhar a interface na tela.</p>
@@ -915,22 +915,22 @@
                     {copyStatus && <div className="copy-toast"><Icon name="check-circle" className="text-emerald-400" />Número SEI copiado!</div>}
                     {syncing && !copyStatus && <div className="copy-toast"><div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>Sincronizando com a planilha...</div>}
 
-                    <header className="bg-white text-slate-800 h-16 flex items-center px-6 justify-between shadow-sm border-b-2 border-indigo-100 sticky top-0 z-50">
+                    <header className="bg-slate-50 text-slate-800 h-16 flex items-center px-6 justify-between shadow-sm border-b-2 border-indigo-200 sticky top-0 z-50">
                         <div className="flex items-center gap-4 min-w-0">
-                            <div className="bg-indigo-50 p-2 rounded-xl border border-indigo-100 flex-shrink-0">
+                            <div className="bg-indigo-100 p-2 rounded-xl border border-indigo-200 flex-shrink-0">
                                 <img src="https://i.ibb.co/8gvSn7GH/logotop-1.webp" alt="Logo GEPOP" className="w-8 h-8 object-contain" />
                             </div>
                             <div className="min-w-0">
-                                <h1 className="text-lg font-black tracking-tighter uppercase leading-none text-slate-900">GEPOP - <span className="text-indigo-500 font-light tracking-normal italic">Controle SEI</span></h1>
-                                <p className="hidden sm:block text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">{activeTab === "Prazos MP" ? "Prazos MP" : activeTab}</p>
+                                <h1 className="text-lg font-black tracking-tighter uppercase leading-none text-slate-900">GEPOP - <span className="text-indigo-600 font-light tracking-normal italic">Controle SEI</span></h1>
+                                <p className="hidden sm:block text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate mt-0.5">{activeTab === "Prazos MP" ? "Prazos MP" : activeTab}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
-                                <button onClick={() => setViewMode('table')} className={`p-1.5 rounded-md transition-all ${viewMode === 'table' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-indigo-600'}`} title="Ver como tabela" aria-label="Ver como tabela"><Icon name="table" size={15} /></button>
-                                <button onClick={() => setViewMode('charts')} className={`p-1.5 rounded-md transition-all ${viewMode === 'charts' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-indigo-600'}`} title="Ver dashboard" aria-label="Ver dashboard"><Icon name="bar-chart-3" size={15} /></button>
+                            <div className="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-lg">
+                                <button onClick={() => setViewMode('table')} className={`p-1.5 rounded-md transition-all ${viewMode === 'table' ? 'bg-indigo-600 text-white shadow' : 'text-slate-500 hover:text-indigo-600'}`} title="Ver como tabela" aria-label="Ver como tabela"><Icon name="table" size={15} /></button>
+                                <button onClick={() => setViewMode('charts')} className={`p-1.5 rounded-md transition-all ${viewMode === 'charts' ? 'bg-indigo-600 text-white shadow' : 'text-slate-500 hover:text-indigo-600'}`} title="Ver dashboard" aria-label="Ver dashboard"><Icon name="bar-chart-3" size={15} /></button>
                             </div>
-                            <button onClick={() => loadData(activeTab, true)} className="p-2 hover:bg-slate-100 rounded-lg transition-all" title="Atualizar Base" aria-label="Atualizar Base"><Icon name="refresh-cw" className={`w-4 h-4 text-slate-400 ${loading ? 'animate-spin' : ''}`} /></button>
+                            <button onClick={() => loadData(activeTab, true)} className="p-2 hover:bg-white border border-transparent hover:border-slate-200 rounded-lg transition-all" title="Atualizar Base" aria-label="Atualizar Base"><Icon name="refresh-cw" className={`w-4 h-4 text-slate-500 ${loading ? 'animate-spin' : ''}`} /></button>
                             <button onClick={() => {
                                 setEditMode(false);
                                 setOriginalNumSei("");
@@ -960,7 +960,7 @@
                         <div className="flex flex-col lg:flex-row gap-5">
                             <div className={`w-full ${sidebarCollapsed ? 'lg:w-[60px]' : 'lg:w-[210px]'} flex-shrink-0 transition-all duration-200`}>
                                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden lg:sticky lg:top-20">
-                                    <div className={`hidden lg:flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'} px-3 py-3 border-b border-slate-100 bg-slate-50/50`}>
+                                    <div className={`hidden lg:flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'} px-3 py-3 border-b border-slate-100 bg-slate-50`}>
                                         <h4 className={`text-[9px] font-black text-slate-400 uppercase tracking-widest ${sidebarCollapsed ? 'hidden' : ''}`}>Canais</h4>
                                         <button onClick={() => setSidebarCollapsed(prev => !prev)} className="flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-white transition-all" title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"} aria-label={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}>
                                             <Icon name={sidebarCollapsed ? "chevron-right" : "chevron-left"} size={14} />
@@ -1329,7 +1329,7 @@
                                         <textarea required placeholder="Resumo do objeto..." rows="4" className="col-span-2 px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium outline-none resize-none transition-all focus:border-slate-900" value={formData.objeto} onChange={e => setFormData({...formData, objeto: e.target.value})}></textarea>
                                     </form>
                                 </div>
-                                <div className="p-8 border-t bg-slate-50/50 flex gap-4">
+                                <div className="p-8 border-t bg-slate-50 flex gap-4">
                                     <button onClick={() => setShowModal(false)} className="flex-1 py-4 font-black text-slate-400 uppercase tracking-widest text-[10px]">Cancelar</button>
                                     <button form="seiForm" disabled={syncing} className="flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-black shadow-sm flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 transition-all text-xs uppercase tracking-widest">{syncing ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div> : <Icon name="check-circle" />}{editMode ? "Atualizar Registro" : "Sincronizar e Salvar"}</button>
                                 </div>
