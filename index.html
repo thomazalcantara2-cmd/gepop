@@ -542,6 +542,7 @@
             
             const [searchTerm, setSearchTerm] = useState("");
             const [filterDate, setFilterDate] = useState("");
+            const [filterDateTo, setFilterDateTo] = useState("");
             const [filterAutor, setFilterAutor] = useState("");
             const [filterDemanda, setFilterDemanda] = useState("");
 
@@ -738,7 +739,8 @@
             const filteredRecords = useMemo(() => {
                 let result = records.filter(r => {
                     const matchesSearch = matchesSearchTerm(r, searchTerm);
-                    const matchesDate = filterDate === "" || toISODate(r.data) === filterDate;
+                    const recDateISO = toISODate(r.data);
+                    const matchesDate = (filterDate === "" || recDateISO >= filterDate) && (filterDateTo === "" || recDateISO <= filterDateTo);
                     const matchesAutor = filterAutor === "" || r.autor === filterAutor;
                     const matchesDemanda = filterDemanda === "" || r.tipoDemanda === filterDemanda;
                     return matchesSearch && matchesDate && matchesAutor && matchesDemanda;
@@ -781,7 +783,7 @@
                     });
                 }
                 return result;
-            }, [records, searchTerm, filterDate, filterAutor, filterDemanda, sortColumn, sortOrder, activeTab]);
+            }, [records, searchTerm, filterDate, filterDateTo, filterAutor, filterDemanda, sortColumn, sortOrder, activeTab]);
 
             const isGlobalSearchActive = searchAllChannels && searchTerm.trim() !== "";
 
@@ -789,7 +791,8 @@
                 if (!isGlobalSearchActive) return [];
                 let result = CATEGORIAS.flatMap(cat => globalCache[cat] || []).filter(r => {
                     const matchesSearch = matchesSearchTerm(r, searchTerm);
-                    const matchesDate = filterDate === "" || toISODate(r.data) === filterDate;
+                    const recDateISO = toISODate(r.data);
+                    const matchesDate = (filterDate === "" || recDateISO >= filterDate) && (filterDateTo === "" || recDateISO <= filterDateTo);
                     const matchesAutor = filterAutor === "" || r.autor === filterAutor;
                     const matchesDemanda = filterDemanda === "" || r.tipoDemanda === filterDemanda;
                     return matchesSearch && matchesDate && matchesAutor && matchesDemanda;
@@ -803,7 +806,7 @@
                 });
                 return result;
                 // eslint-disable-next-line react-hooks/exhaustive-deps
-            }, [isGlobalSearchActive, searchTerm, filterDate, filterAutor, filterDemanda, loadingGlobalSearch]);
+            }, [isGlobalSearchActive, searchTerm, filterDate, filterDateTo, filterAutor, filterDemanda, loadingGlobalSearch]);
 
             const displayRecords = isGlobalSearchActive ? globalSearchResults : filteredRecords;
             const paginatedRecords = useMemo(() => displayRecords.slice(0, visibleCount), [displayRecords, visibleCount]);
@@ -880,8 +883,8 @@
             };
 
             const isPrazosTab = activeTab === "Prazos MP";
-            const hasActiveFilters = Boolean(searchTerm || filterDate || filterAutor || filterDemanda);
-            const clearFilters = () => { setSearchTerm(""); setFilterDate(""); setFilterAutor(""); setFilterDemanda(""); };
+            const hasActiveFilters = Boolean(searchTerm || filterDate || filterDateTo || filterAutor || filterDemanda);
+            const clearFilters = () => { setSearchTerm(""); setFilterDate(""); setFilterDateTo(""); setFilterAutor(""); setFilterDemanda(""); };
 
             const Hyperlink = ({ url }) => {
                 if (!url || url === "---" || url === "" || url === "undefined") {
@@ -998,7 +1001,14 @@
                                                     {loadingGlobalSearch && <div className="w-3 h-3 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>}
                                                 </label>
                                             </div>
-                                            <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Data</label><input type="date" className="filter-input" value={filterDate} onChange={e => setFilterDate(e.target.value)} /></div>
+                                            <div className="space-y-1">
+                                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Período</label>
+                                                <div className="flex items-center gap-1">
+                                                    <input type="date" className="filter-input flex-1 min-w-0" value={filterDate} max={filterDateTo || undefined} onChange={e => setFilterDate(e.target.value)} title="De" />
+                                                    <span className="text-slate-300 text-[10px] font-bold flex-shrink-0">–</span>
+                                                    <input type="date" className="filter-input flex-1 min-w-0" value={filterDateTo} min={filterDate || undefined} onChange={e => setFilterDateTo(e.target.value)} title="Até" />
+                                                </div>
+                                            </div>
                                             <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Autor</label><select className="filter-input" value={filterAutor} onChange={e => setFilterAutor(e.target.value)}><option value="">Todos os Autores</option>{AUTORES.map(a => <option key={a} value={a}>{a}</option>)}</select></div>
                                             <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Demanda</label><select className="filter-input" value={filterDemanda} onChange={e => setFilterDemanda(e.target.value)}><option value="">Todas as Demandas</option>{sortedTiposDemanda.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
                                         </div>
