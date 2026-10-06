@@ -564,9 +564,6 @@
                 const rawUrgente = item.urgente || item.Urgente || item.URGENTE || false;
 
                 let finalDisplayId = String(item.id ?? item.sequencial ?? "---");
-                if (!cat.includes("Ofício")) {
-                    finalDisplayId = String(index + 1).padStart(3, '0');
-                }
 
                 const rawLink = item.link_gdrive || item.linkgdrive || item["Link GDrive"] || item["LINK GDRIVE"] || item.link || item.Link || item.LINK || item["Link do GDrive"] || "";
 
