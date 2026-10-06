@@ -907,7 +907,7 @@
             };
 
             const handleSort = (col) => {
-                if (sortColumn === col || (sortColumn === 'default' && col === 'id')) {
+                if (sortColumn === col || (sortColumn === 'default' && col === 'id' && activeTab !== "Prazos MP")) {
                     setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
                 } else {
                     setSortColumn(col);
@@ -1158,7 +1158,7 @@
                                                             ) : isPrazosTab ? (
                                                                 <tr>
                                                                     <th className="w-[60px] text-center cursor-pointer hover:bg-slate-200 transition-colors group/sort" onClick={() => handleSort('id')}>
-                                                                        <div className="flex items-center justify-center gap-1">ID<div className={`flex flex-col ${sortColumn === 'id' || sortColumn === 'default' ? 'opacity-100' : 'opacity-30'}`}><Icon name="chevron-up" className={`w-3 h-3 ${(sortColumn === 'id' || sortColumn === 'default') && sortOrder === 'asc' ? 'text-indigo-600' : ''}`} /><Icon name="chevron-down" className={`w-3 h-3 ${(sortColumn === 'id' || sortColumn === 'default') && sortOrder === 'desc' ? 'text-indigo-600' : ''}`} /></div></div>
+                                                                        <div className="flex items-center justify-center gap-1">ID<div className={`flex flex-col ${sortColumn === 'id' ? 'opacity-100' : 'opacity-30'}`}><Icon name="chevron-up" className={`w-3 h-3 ${sortColumn === 'id' && sortOrder === 'asc' ? 'text-indigo-600' : ''}`} /><Icon name="chevron-down" className={`w-3 h-3 ${sortColumn === 'id' && sortOrder === 'desc' ? 'text-indigo-600' : ''}`} /></div></div>
                                                                     </th>
                                                                     <th className="w-[50px] text-center" title="Prioridade / Urgência"><Icon name="alert-circle" size={14} /></th>
                                                                     <th className="w-[150px] text-center cursor-pointer hover:bg-slate-200 transition-colors group/sort" onClick={() => handleSort('prazo')}>
