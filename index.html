@@ -732,7 +732,9 @@
             const handleSave = async (e) => {
                 e.preventDefault(); setSyncing(true);
                 const isManual = formData.categoria.includes("Ofício");
-                const nextSeq = String(records.length + 1).padStart(3, '0');
+                const recordsDaCategoria = formData.categoria === activeTab ? records : (globalCache[formData.categoria] || []);
+                const maxId = recordsDaCategoria.reduce((max, r) => Math.max(max, parseInt(r.displayId) || 0), 0);
+                const nextSeq = String(maxId + 1).padStart(3, '0');
                 
                 let prazoParaSalvar = formData.prazo;
                 if (prazoParaSalvar && prazoParaSalvar.includes('-')) {
